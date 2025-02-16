@@ -1,0 +1,32 @@
+server:
+  port: 18197
+
+spring:
+  application:
+    name: byb-wallet-sol-block-chain
+  profiles:
+    active: @profiles.active@
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  cloud:
+    nacos:
+      discovery:
+        server-addr: @nacos.server-addr@
+        namespace: @nacos.namespace@
+        group: DEFAULT_GROUP
+      config:
+        server-addr: @nacos.server-addr@
+        namespace: @nacos.namespace@
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        name: byb-wallet-sol-block-chain
+        shared-configs:
+          - data-id: byb-wallet-database.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    path: /data/app/${spring.application.name}/logs
