@@ -9,6 +9,8 @@ import com.byb.wallet.sol.ChatClient;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.redis.core.HashOperations;
@@ -30,6 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class AkkaManagerActorsListener implements ApplicationListener<ContextRefreshedEvent> {
+    private static final Logger log = LoggerFactory.getLogger(AkkaManagerActorsListener.class);
+
     public static class Data  {
         public String name;
 
@@ -112,6 +116,8 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
                                 + msg.getName()+"&"
                                 + msg.getMessage());
                         System.out.println("处理时间："+(System.currentTimeMillis() - startTime));
+                        log.info("redisSaveTime:"+(System.currentTimeMillis() - startTime));
+
                     })
                     .build();
         }
