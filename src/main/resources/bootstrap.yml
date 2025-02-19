@@ -20,9 +20,9 @@ spring:
         namespace: @nacos.namespace@
         group: DEFAULT_GROUP
         file-extension: yaml
-        name: byb-wallet-sol-block-chain
+        name: xbit-market-condition
         shared-configs:
-          - data-id: byb-wallet-database.yaml
+          - data-id: xbit-database.yaml
             group: DEFAULT_GROUP
             refresh: true
 
