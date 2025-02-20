@@ -144,7 +144,7 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
                                 listOps.set("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(),0, JSONUtil.toJsonStr(barOne));
                             } else{
                                 listOps.leftPush("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), JSONUtil.toJsonStr(barOne));
-                                listOps.trim("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), 0, 6);
+                                listOps.trim("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), 0, 100);
                                 barOne.setSaved(true);
                             }
                         }
