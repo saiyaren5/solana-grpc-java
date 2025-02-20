@@ -66,6 +66,7 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
 
         Bar bar;
         Map<BarType, Bar> barMap = new HashMap<>();
+        Trade trade;
 
 
         RemoteActor(ListOperations<String, String> listOps) {
@@ -76,6 +77,7 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
 
         @Override
         public void preStart() {
+
             this.bar = new Bar();
         }
 
@@ -87,27 +89,69 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
 //                        valueOperations.set("SOLANA:"+msg.getName(),msg.getMessage());
                         long startTime = System.currentTimeMillis();
 //                        listOps.rightPush("SOLANA:"+msg.getName(), msg.getMessage());
-                        // 更新bar
-                        BigDecimal tokenChange =  new JSONObject(msg.getMessage()).getBigDecimal("tokenChange");
-                        bar.setClose(tokenChange);
-                        long length = listOps.rightPush("SOLANA:"+msg.getName()+"MIN1", JSONUtil.toJsonStr(bar));
+                        // 更新bar,保存到map
+                        JSONObject tradeJson = new JSONObject(msg.getMessage());
+                        long timeStamp = tradeJson.getLong("timeStamp", 0L);
 
-                        // 生成barMap，
+                        BigDecimal tokenChange =  tradeJson.getBigDecimal("tokenChange");
+
+                        // 通过timeStamp判断，是否要生成新的bar,这个方法放到bar类中
+                        // bar中数据，按照时间周期进行保存和生成，判断是相同时间段的进行更新操作
+                        // 通过timeStamp来生成barId,不同barType的barId也不一致
+                        // 通过id来判断是否保存过redis，如果保存过进行id生成
                         for(BarType barType : BarType.values()) {
-                            if(barMap.get(barType) != null) {
-                                barMap.get(barType).setClose(tokenChange);
-                                barMap.put(barType, barMap.get(barType));
-                            } else {
-                                Bar newBar = new Bar();
-                                newBar.setBarType(barType);
-                                barMap.put(barType, newBar);
+                            long barId = barType.getId(timeStamp);
+                            Bar bar = barMap.get(barType);
+                            if(bar == null) {
+                                bar = new Bar();
+                                bar.setOpen(tokenChange);
+                                bar.setHigh(tokenChange);
+                                bar.setLow(tokenChange);
+                                bar.setClose(tokenChange);
+                                bar.setBarType(barType);
+                                bar.setBarId(barId);
+                                barMap.put(barType, bar);
+
+                            }else{
+                                // 通过timeStamp和barType得到barId，判断是否需要重新生成bar
+                                if(barId < bar.getBarId()) return ;
+                                if(barId > bar.getBarId()) {
+                                    Bar nextBar = new Bar();
+                                    nextBar.setBarId(barId);
+                                    nextBar.setOpen(tokenChange);
+                                    nextBar.setHigh(tokenChange);
+                                    nextBar.setLow(tokenChange);
+                                    nextBar.setClose(tokenChange);
+                                    nextBar.setBarType(barType);
+                                    barMap.put(barType, nextBar);
+                                } else {
+                                    bar.setBarId(barType.getId(timeStamp));
+                                    bar.setClose(tokenChange);
+                                    barMap.put(barType, bar);
+                                }
+                            }
+//                            bar.setBarId(timeStamp);
+//                            bar.setBarType(barType);
+                        }
+
+                        // bars入库redis,判断bar如果是首次保存则保存，否则进行更新
+                        for(Bar barOne : barMap.values()) {
+                            if(barOne.isSaved() == true) {
+//                                System.out.println("SOLANA:"+msg.getName()+":"+barOne.getBarType().name());
+//                                System.out.println(barOne.isSaved());
+//                                System.out.println(barOne.toString());
+                                //更新redis中的bar
+                                listOps.set("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(),0, JSONUtil.toJsonStr(barOne));
+                            } else{
+                                listOps.leftPush("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), JSONUtil.toJsonStr(barOne));
+                                listOps.trim("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), 0, 6);
+                                barOne.setSaved(true);
                             }
                         }
-                        // bars入库redis
-                        for(Bar barOne : barMap.values()) {
-                            listOps.rightPush("SOLANA:"+msg.getName()+":"+barOne.getBarType().name(), JSONUtil.toJsonStr(barOne));
 
-                        }
+                        // 直接保存message，作为trade，入库redis，最多保存10条
+                        listOps.leftPush("SOLANA:"+msg.getName()+":"+"TRADE", msg.getMessage());
+                        listOps.trim("SOLANA:"+msg.getName()+":"+"TRADE", 0, 100);
 //                        if(length > 10)
 //                            listOps.trim("SOLANA:"+msg.getName()+"MIN1", 8, 0);
                         System.out.println("Received message from Node B: "
@@ -128,9 +172,16 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
         @Override
         public Receive createReceive() {
             return receiveBuilder().match(ChatClient.class, msg->{
+//                System.out.println(msg.toString());
+//                System.out.println("msg===>"+msg+"getName===>"+msg.getName());
+                if(msg.getName() == null) return;
                 if(starups.containsKey(msg.getName())) {
                     getActor(msg.getName()).tell(msg, self());
                 }else {
+                    // 添加限制actor数量的逻辑，如果超出某个数值，不进行创建
+                    if(starups.size() > 5000) {
+                        return ;
+                    }
                     putActor(msg.getName(), startActor(this.getContext().getSystem(), msg.getName()));
                     starups.put(msg.getName(),msg.getName());
 //                    Thread.sleep(1000);

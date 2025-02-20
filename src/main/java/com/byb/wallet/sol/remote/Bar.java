@@ -53,10 +53,28 @@ public class Bar {
     private BigDecimal close;
     private BarType barType;
 
+    private boolean saved;
+    private long barId;
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
+    }
+
+    public long getBarId() {
+        return barId;
+    }
+
+    public void setBarId(long barId) {
+        this.barId = barId;
+    }
+
     @Override
     public String toString() {
         JSONObject jsonObject = new JSONObject();
-
         return super.toString();
     }
 }

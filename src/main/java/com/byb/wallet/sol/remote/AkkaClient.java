@@ -79,11 +79,13 @@ public class AkkaClient {
 
 
                     byte[] bytes = response.getTransaction().getTransaction().getSignature().toByteArray();
-//                    System.out.println("getSignature: " + Base58.encode(bytes));
+                    System.out.println("getSignature: " + Base58.encode(bytes));
+                    System.out.println(new Date ());
                     //遍历instructions和innerInstructions
                     SolanaStorage.TransactionStatusMeta metaInfo =
                             response.getTransaction().getTransaction().getMeta();
 
+                    System.out.println(response.getBlockMeta().getBlockTime());
 //                    metaInfo.getPreTokenBalancesList().stream().filter(o->o.getAccountIndex() == 1);
 //                    metaInfo.getFee();
 //                    metaInfo.getInnerInstructionsList();

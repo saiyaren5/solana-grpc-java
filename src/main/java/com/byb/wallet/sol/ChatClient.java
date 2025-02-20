@@ -16,6 +16,11 @@ public class ChatClient implements Serializable {
     public ChatClient() {
     }
 
+    @Override
+    public String toString() {
+        return this.name+"==>"+this.message;
+    }
+
     // 带有参数的构造函数
     public ChatClient(String name, String message) {
         this.name = name;
