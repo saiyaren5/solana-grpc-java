@@ -13,8 +13,8 @@ public class ParseBlock {
 
         //如果有多个交易对，则需另外设计规则进行匹配，如:
 //        https://solscan.io/tx/564qJYbkGPz9UMnUksJDYsv7cA3abRhXsnkktfPdUUUKdSWpX9rtYyRvaF3ivehoz58GH2RSTs8ygBcjmZ3vr8fr#tokenBalanceChange
-        JSONObject jsonObjectNull = new JSONObject("{\"aaa\":null}");
-        System.out.println(jsonObjectNull.getStr("aaa") == null);
+        JSONObject jsonObjectNull = new JSONObject("{\"signature\":null}");
+        System.out.println(jsonObjectNull.getStr("signature") == null);
 
 
         List<String> transfers = new ArrayList<>();
