@@ -163,7 +163,9 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
                                 + msg.getMessage());
 
                         // 此处添加最新成交推送
-                        messagingTemplate.convertAndSend("/trade",msg.getMessage());
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.set("msg", msg.getMessage());
+                        messagingTemplate.convertAndSend("/topic/trade",jsonObject);
 
                         System.out.println("处理时间："+(System.currentTimeMillis() - startTime));
                         log.info("redisSaveTime:"+(System.currentTimeMillis() - startTime));
