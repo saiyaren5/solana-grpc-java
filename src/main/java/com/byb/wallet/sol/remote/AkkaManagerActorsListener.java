@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import scala.sys.Prop;
 
@@ -33,7 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class AkkaManagerActorsListener implements ApplicationListener<ContextRefreshedEvent> {
     private static final Logger log = LoggerFactory.getLogger(AkkaManagerActorsListener.class);
-
+    @Resource
+    private SimpMessagingTemplate messagingTemplate;
     public static class Data  {
         public String name;
 
@@ -159,6 +161,10 @@ public class AkkaManagerActorsListener implements ApplicationListener<ContextRef
                                 + this.toString() +"||"
                                 + msg.getName()+"&"
                                 + msg.getMessage());
+
+                        // 此处添加最新成交推送
+                        messagingTemplate.convertAndSend("/trade",msg.getMessage());
+
                         System.out.println("处理时间："+(System.currentTimeMillis() - startTime));
                         log.info("redisSaveTime:"+(System.currentTimeMillis() - startTime));
 
